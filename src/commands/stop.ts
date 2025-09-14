@@ -11,22 +11,22 @@ export const stop = () => {
       return;
     }
 
-    // Проверяем, подписан ли пользователь
-    if (!wordScheduler.isUserSubscribed(userId)) {
+    // Проверяем, активен ли пользователь
+    if (!wordScheduler.isUserActive(userId)) {
       const keyboard = createMainKeyboard(false);
-      await ctx.reply('ℹ️ Вы не подписаны на получение слов. Используйте кнопку ниже чтобы подписаться.', {
+      await ctx.reply('ℹ️ Вы не получаете слова. Используйте кнопку ниже чтобы начать.', {
         parse_mode: 'HTML',
         ...keyboard
       });
       return;
     }
 
-    // Отписываем пользователя
-    const removed = wordScheduler.unsubscribeUser(userId);
+    // Удаляем пользователя из активных
+    const removed = wordScheduler.removeUser(userId);
 
     if (removed) {
       const keyboard = createMainKeyboard(false);
-      await ctx.reply('❌ <b>Подписка отменена!</b>\nИспользуй кнопку ниже, чтобы возобновить обучение:', {
+      await ctx.reply('❌ <b>Рассылка остановлена!</b>\nИспользуй кнопку ниже, чтобы возобновить обучение:', {
         parse_mode: 'HTML',
         ...keyboard
       });

@@ -21,65 +21,40 @@ export const callbackHandler = () => {
 
     try {
       switch (data) {
-        case 'start':
-          if (wordScheduler.isUserSubscribed(userId)) {
-            await ctx.editMessageText(
-              '✅ <b>Вы уже подписаны!</b>\n' +
-              'Слова приходят автоматически каждые 15 секунд.\n' +
-              'Учись легко и каждый день! 💪',
-              { 
-                parse_mode: 'HTML',
-                ...createMainKeyboard(true)
-              }
-            );
-          } else {
-            wordScheduler.subscribeUser(userId, chatId, ctx);
-            await ctx.editMessageText(
-              '✅ <b>Подписка активирована!</b>\n' +
-              'Сейчас пришлю первое слово, а затем каждые 15 секунд буду присылать новые автоматически!\n' +
-              'Учись легко и каждый день! 💪',
-              { 
-                parse_mode: 'HTML',
-                ...createMainKeyboard(true)
-              }
-            );
-          }
-          break;
+         case 'start':
+           wordScheduler.addUser(userId, chatId, ctx);
+           await ctx.editMessageText(
+             '✅ <b>Рассылка запущена!</b>\n' +
+             'Каждые 2 минуты 40 секунд ты будешь получать новые слова.\n' +
+             'Учись легко и каждый день! 💪',
+             { 
+               parse_mode: 'HTML',
+               ...createMainKeyboard(true)
+             }
+           );
+           break;
 
         case 'stop':
-          if (!wordScheduler.isUserSubscribed(userId)) {
-            await ctx.editMessageText(
-              '❌ <b>Вы не подписаны!</b>\n' +
-              'Нажми "Подписаться", чтобы начать получать слова.',
-              { 
-                parse_mode: 'HTML',
-                ...createMainKeyboard(false)
-              }
-            );
-          } else {
-            wordScheduler.unsubscribeUser(userId);
-            await ctx.editMessageText(
-              '❌ <b>Подписка отменена!</b>\n' +
-              'Нажми "Подписаться", чтобы продолжить обучение.',
-              { 
-                parse_mode: 'HTML',
-                ...createMainKeyboard(false)
-              }
-            );
-          }
+          wordScheduler.removeUser(userId);
+          await ctx.editMessageText(
+            '❌ <b>Рассылка остановлена!</b>\n' +
+            'Нажми "Запустить", чтобы продолжить обучение.',
+            { 
+              parse_mode: 'HTML',
+              ...createMainKeyboard(false)
+            }
+          );
           break;
 
         case 'stats':
           const stats = wordScheduler.getStats();
           const totalWords = germanWords.length;
-          const isUserSubscribed = wordScheduler.isUserSubscribed(userId);
           
           await ctx.editMessageText(
             `📊 <b>Статистика:</b>\n\n` +
             `📚 Слов в базе: <b>${totalWords}</b>\n` +
-            `👥 Подписанных: <b>${stats.subscribedUsers}</b>\n` +
-            `⏰ Интервал: <b>15 секунд</b>\n` +
-            `🔄 Ваш статус: <b>${isUserSubscribed ? 'Подписан' : 'Не подписан'}</b>`,
+            `👥 Активных: <b>${stats.activeUsers}</b>\n` +
+            `⏰ Интервал: <b>2 минуты 40 секунд</b>`,
             { 
               parse_mode: 'HTML',
               ...createStatsKeyboard()
@@ -88,8 +63,8 @@ export const callbackHandler = () => {
           break;
 
         case 'menu':
-          const isSubscribed = wordScheduler.isUserSubscribed(userId);
-          const status = isSubscribed ? '✅ подписан' : '❌ не подписан';
+          const isActive = wordScheduler.isUserActive(userId);
+          const status = isActive ? '✅ активна' : '❌ остановлена';
           
           await ctx.editMessageText(
             `🎛️ <b>Меню</b>\n\n` +
@@ -97,7 +72,7 @@ export const callbackHandler = () => {
             `Выбери действие:`,
             { 
               parse_mode: 'HTML',
-              ...createMenuKeyboard(isSubscribed)
+              ...createMenuKeyboard(isActive)
             }
           );
           break;
