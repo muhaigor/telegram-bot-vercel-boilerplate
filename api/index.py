@@ -177,27 +177,26 @@ def handler(request):
     if request.method == "POST":
         # Обработка webhook
         try:
-            # Создаем новый event loop
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            
-            # Инициализируем приложение
-            loop.run_until_complete(app.initialize())
-            
             # Получаем данные из запроса
             update_data = request.get_json()
             if update_data:
                 update = Update.de_json(update_data, app.bot)
                 if update:
-                    loop.run_until_complete(app.process_update(update))
-            
-            # Завершаем работу
-            loop.run_until_complete(app.shutdown())
+                    # Создаем новый event loop для обработки
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    
+                    try:
+                        # Инициализируем приложение
+                        loop.run_until_complete(app.initialize())
+                        # Обрабатываем обновление
+                        loop.run_until_complete(app.process_update(update))
+                        # Завершаем работу
+                        loop.run_until_complete(app.shutdown())
+                    finally:
+                        loop.close()
             
         except Exception as e:
             print(f"Ошибка в handler: {e}")
-        finally:
-            if 'loop' in locals():
-                loop.close()
     
     return {"statusCode": 200, "body": "OK"}
