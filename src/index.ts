@@ -6,7 +6,7 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { development, production } from './core';
 const token = '7325353221:AAEta0uc1hlRSOEDiIsvYkBwbgza7Y-oPlM';
 const BOT_TOKEN = token || process.env.BOT_TOKEN || '';
-const ENVIRONMENT = token || process.env.NODE_ENV || '';
+const ENVIRONMENT = process.env.NODE_ENV || '';
 
 const bot = new Telegraf(BOT_TOKEN);
 
