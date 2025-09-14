@@ -12,7 +12,7 @@ interface ActiveUser {
 // Класс для управления расписанием отправки слов
 export class WordScheduler {
   private activeUsers: Map<number, ActiveUser> = new Map();
-  private readonly intervalMs: number = 160000; // 2 минуты 40 секунд
+  private readonly intervalMs: number = 15000; // 15 секунд
 
   // Добавить пользователя в расписание
   public addUser(userId: number, chatId: number, ctx: Context): void {
