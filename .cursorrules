@@ -1,0 +1,63 @@
+Before implementing the best practices, please adapt the globs according to your project's structure.
+
+---
+name: vercel-node-best-practices.mdc
+description: Best practices for Vercel Node.js applications
+globs: **/*.{ts,js}
+---
+
+- Use serverless functions for handling requests efficiently.
+- Optimize cold starts by minimizing dependencies in your functions.
+- Leverage Vercel's environment variables for configuration management.
+
+---
+name: dotenv-cli-best-practices.mdc
+description: Best practices for managing environment variables with dotenv-cli
+globs: **/*.env
+---
+
+- Store sensitive information in a `.env` file and add it to `.gitignore`.
+- Use a `.env.example` file to document required environment variables.
+- Validate environment variables at runtime to ensure necessary configurations are set.
+
+---
+name: telegraf-best-practices.mdc
+description: Best practices for building Telegram bots with Telegraf
+globs: **/*.{ts,js}
+---
+
+- Use middleware for modular and reusable bot logic.
+- Implement error handling to manage exceptions gracefully.
+- Utilize session management for user state persistence.
+- Keep commands organized and use command handlers for better maintainability.
+
+---
+name: typescript-best-practices.mdc 
+description: TypeScript coding standards and type safety guidelines
+globs: **/*.{ts,tsx}
+---
+
+- Use strict null checks to avoid runtime errors.
+- Prefer interface over type for defining object shapes.
+- Implement type guards and assertions for better type safety.
+- Use enums for fixed sets of values to improve code clarity.
+
+---
+name: prettier-best-practices.mdc
+description: Best practices for code formatting with Prettier
+globs: **/*.{ts,js,json,md}
+---
+
+- Use a consistent configuration file (`.prettierrc`) for team-wide formatting.
+- Integrate Prettier with your editor for real-time formatting feedback.
+- Run Prettier as part of your CI/CD pipeline to enforce code style.
+
+---
+name: nodemon-best-practices.mdc
+description: Best practices for using Nodemon in development
+globs: **/*.{ts,js}
+---
+
+- Use Nodemon with a configuration file (`nodemon.json`) for custom settings.
+- Specify file extensions to watch to optimize performance.
+- Use the `--exec` flag to run TypeScript files directly with `ts-node`.
