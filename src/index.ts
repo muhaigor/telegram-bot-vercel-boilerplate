@@ -18,6 +18,9 @@ bot.use(errorHandler);
 bot.use(commandLogger);
 bot.use(userActivityLogger);
 
+// Инициализируем WordScheduler для автоматической отправки слов
+wordScheduler.initialize(bot);
+
 // Регистрируем команды
 bot.command('start', start());
 bot.command('stop', stop());

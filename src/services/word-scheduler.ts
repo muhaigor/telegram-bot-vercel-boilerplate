@@ -1,78 +1,104 @@
-import { Context } from 'telegraf';
+import { Context, Telegraf } from 'telegraf';
 import { getRandomWord, GermanWord } from '../data/german-words';
 
-// Интерфейс для активного пользователя
-interface ActiveUser {
+// Интерфейс для подписанного пользователя
+interface SubscribedUser {
   userId: number;
   chatId: number;
-  intervalId: NodeJS.Timeout;
   isActive: boolean;
 }
 
 // Класс для управления расписанием отправки слов
 export class WordScheduler {
-  private activeUsers: Map<number, ActiveUser> = new Map();
+  private subscribedUsers: Map<number, SubscribedUser> = new Map();
   private readonly intervalMs: number = 15000; // 15 секунд
+  private globalIntervalId: NodeJS.Timeout | null = null;
+  private bot: Telegraf | null = null;
 
-  // Добавить пользователя в расписание
-  public addUser(userId: number, chatId: number, ctx: Context): void {
-    // Если пользователь уже активен, сначала остановить его
-    this.removeUser(userId);
+  // Инициализировать бота и запустить глобальный таймер
+  public initialize(bot: Telegraf): void {
+    this.bot = bot;
+    this.startGlobalTimer();
+    console.log('WordScheduler инициализирован, глобальный таймер запущен');
+  }
 
+  // Запустить глобальный таймер для отправки слов всем подписанным пользователям
+  private startGlobalTimer(): void {
+    if (this.globalIntervalId) {
+      clearInterval(this.globalIntervalId);
+    }
+
+    this.globalIntervalId = setInterval(async () => {
+      await this.sendWordsToAllSubscribers();
+    }, this.intervalMs);
+
+    console.log(`Глобальный таймер запущен с интервалом ${this.intervalMs}мс`);
+  }
+
+  // Отправить слова всем подписанным пользователям
+  private async sendWordsToAllSubscribers(): Promise<void> {
+    if (!this.bot) return;
+
+    const word = getRandomWord();
+    const message = this.formatWordMessage(word);
+
+    for (const [userId, user] of this.subscribedUsers) {
+      if (user.isActive) {
+        try {
+          await this.bot.telegram.sendMessage(user.chatId, message, { parse_mode: 'HTML' });
+        } catch (error) {
+          console.error(`Ошибка отправки слова пользователю ${userId}:`, error);
+          // При ошибке отправки отписываем пользователя
+          this.unsubscribeUser(userId);
+        }
+      }
+    }
+  }
+
+  // Подписать пользователя на получение слов
+  public subscribeUser(userId: number, chatId: number, ctx: Context): void {
     // Отправляем первое слово сразу
     this.sendFirstWord(ctx);
 
-    const intervalId = setInterval(async () => {
-      try {
-        const word = getRandomWord();
-        await this.sendWordMessage(ctx, word);
-      } catch (error) {
-        console.error(`Ошибка отправки слова пользователю ${userId}:`, error);
-        // При ошибке отправки удаляем пользователя из расписания
-        this.removeUser(userId);
-      }
-    }, this.intervalMs);
-
-    this.activeUsers.set(userId, {
+    this.subscribedUsers.set(userId, {
       userId,
       chatId,
-      intervalId,
       isActive: true
     });
 
-    console.log(`Пользователь ${userId} добавлен в расписание отправки слов`);
+    console.log(`Пользователь ${userId} подписан на получение слов`);
   }
 
-  // Удалить пользователя из расписания
-  public removeUser(userId: number): boolean {
-    const user = this.activeUsers.get(userId);
+  // Отписать пользователя от получения слов
+  public unsubscribeUser(userId: number): boolean {
+    const user = this.subscribedUsers.get(userId);
     if (user) {
-      clearInterval(user.intervalId);
-      this.activeUsers.delete(userId);
-      console.log(`Пользователь ${userId} удален из расписания`);
+      this.subscribedUsers.delete(userId);
+      console.log(`Пользователь ${userId} отписан от получения слов`);
       return true;
     }
     return false;
   }
 
-  // Проверить, активен ли пользователь
-  public isUserActive(userId: number): boolean {
-    const user = this.activeUsers.get(userId);
+  // Проверить, подписан ли пользователь
+  public isUserSubscribed(userId: number): boolean {
+    const user = this.subscribedUsers.get(userId);
     return user ? user.isActive : false;
   }
 
-  // Получить количество активных пользователей
-  public getActiveUsersCount(): number {
-    return this.activeUsers.size;
+  // Получить количество подписанных пользователей
+  public getSubscribedUsersCount(): number {
+    return this.subscribedUsers.size;
   }
 
-  // Остановить всех пользователей
+  // Остановить глобальный таймер и очистить всех пользователей
   public stopAll(): void {
-    this.activeUsers.forEach((user) => {
-      clearInterval(user.intervalId);
-    });
-    this.activeUsers.clear();
-    console.log('Все пользователи удалены из расписания');
+    if (this.globalIntervalId) {
+      clearInterval(this.globalIntervalId);
+      this.globalIntervalId = null;
+    }
+    this.subscribedUsers.clear();
+    console.log('Глобальный таймер остановлен, все пользователи отписаны');
   }
 
   // Отправить первое слово сразу при запуске
@@ -108,9 +134,9 @@ export class WordScheduler {
   }
 
   // Получить статистику
-  public getStats(): { activeUsers: number; intervalMs: number } {
+  public getStats(): { subscribedUsers: number; intervalMs: number } {
     return {
-      activeUsers: this.activeUsers.size,
+      subscribedUsers: this.subscribedUsers.size,
       intervalMs: this.intervalMs
     };
   }
