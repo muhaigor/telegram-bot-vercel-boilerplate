@@ -15,11 +15,10 @@ export class WordScheduler {
   private globalIntervalId: NodeJS.Timeout | null = null;
   private bot: Telegraf | null = null;
 
-  // Инициализировать бота и запустить глобальный таймер
+  // Инициализировать бота
   public initialize(bot: Telegraf): void {
     this.bot = bot;
-    this.startGlobalTimer();
-    console.log('🚀 WordScheduler инициализирован, глобальный таймер запущен');
+    console.log('🚀 WordScheduler инициализирован');
   }
 
   // Запустить глобальный таймер для отправки слов всем активным пользователям
@@ -38,6 +37,8 @@ export class WordScheduler {
 
   // Отправить слова всем активным пользователям
   private async sendWordsToAllActiveUsers(): Promise<void> {
+    console.log('🔍 Проверяем условия для отправки слов...');
+    
     if (!this.bot) {
       console.log('❌ Бот не инициализирован');
       return;
@@ -49,6 +50,8 @@ export class WordScheduler {
     }
 
     console.log(`📤 Отправляем слова ${this.activeUsers.size} активным пользователям`);
+    console.log('👥 Активные пользователи:', Array.from(this.activeUsers.keys()));
+    
     const word = getRandomWord();
     const message = this.formatWordMessage(word);
     console.log(`📝 Слово: ${word.ge} - ${word.ru}`);
@@ -66,6 +69,8 @@ export class WordScheduler {
           this.activeUsers.delete(userId);
           console.log(`🗑️ Пользователь ${userId} удален из активных из-за ошибки`);
         }
+      } else {
+        console.log(`⚠️ Пользователь ${userId} неактивен, пропускаем`);
       }
     }
   }
@@ -79,6 +84,11 @@ export class WordScheduler {
     });
 
     console.log(`✅ Пользователь ${userId} добавлен в активные (всего активных: ${this.activeUsers.size})`);
+    
+    // Запускаем таймер только если это первый пользователь
+    if (this.activeUsers.size === 1 && !this.globalIntervalId) {
+      this.startGlobalTimer();
+    }
   }
 
   // Удалить пользователя из активных
@@ -87,6 +97,14 @@ export class WordScheduler {
     if (user) {
       this.activeUsers.delete(userId);
       console.log(`❌ Пользователь ${userId} удален из активных (осталось активных: ${this.activeUsers.size})`);
+      
+      // Останавливаем таймер если не осталось активных пользователей
+      if (this.activeUsers.size === 0 && this.globalIntervalId) {
+        clearInterval(this.globalIntervalId);
+        this.globalIntervalId = null;
+        console.log('⏹️ Таймер остановлен - нет активных пользователей');
+      }
+      
       return true;
     }
     return false;
