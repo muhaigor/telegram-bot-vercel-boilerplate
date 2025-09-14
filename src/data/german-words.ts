@@ -1,13 +1,10 @@
 // Словарь немецких слов с переводами на русский
 export interface GermanWord {
-  german: string;
-  russian: string;
-  pronunciation?: string;
-  category?: string;
+  ge: string;
+  ru: string;
 }
 
-export const germanWords: 
-  GERMAN_WORDS = [
+export const germanWords: GermanWord[] = [
     {
       "ge": "riechen",
       "ru": "нюхать"
@@ -3522,19 +3519,4 @@ export const germanWords:
 export const getRandomWord = (): GermanWord => {
   const randomIndex = Math.floor(Math.random() * germanWords.length);
   return germanWords[randomIndex];
-};
-
-// Функция для получения слова по категории
-export const getWordByCategory = (category: string): GermanWord | null => {
-  const wordsInCategory = germanWords.filter(word => word.category === category);
-  if (wordsInCategory.length === 0) return null;
-  
-  const randomIndex = Math.floor(Math.random() * wordsInCategory.length);
-  return wordsInCategory[randomIndex];
-};
-
-// Функция для получения всех категорий
-export const getCategories = (): string[] => {
-  const categories = new Set(germanWords.map(word => word.category).filter((category): category is string => Boolean(category)));
-  return Array.from(categories);
 };

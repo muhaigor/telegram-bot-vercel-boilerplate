@@ -1,6 +1,6 @@
 import { Telegraf } from 'telegraf';
 
-import { about, start, stop, test, stats, help } from './commands';
+import { about, start, stop, test, stats, help, callbackHandler } from './commands';
 import { greeting } from './text';
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { development, production } from './core';
@@ -25,6 +25,9 @@ bot.command('test', test());
 bot.command('stats', stats());
 bot.command('help', help());
 bot.command('about', about());
+
+// Обработчик для inline-кнопок
+bot.action(/.*/, callbackHandler());
 
 // Обработчик для всех остальных сообщений
 bot.on('message', greeting());

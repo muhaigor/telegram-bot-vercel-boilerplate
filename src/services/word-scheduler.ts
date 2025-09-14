@@ -12,7 +12,7 @@ interface ActiveUser {
 // Класс для управления расписанием отправки слов
 export class WordScheduler {
   private activeUsers: Map<number, ActiveUser> = new Map();
-  private readonly intervalMs: number = 10000; // 10 секунд
+  private readonly intervalMs: number = 160000; // 2 минуты 40 секунд
 
   // Добавить пользователя в расписание
   public addUser(userId: number, chatId: number, ctx: Context): void {
@@ -80,16 +80,8 @@ export class WordScheduler {
 
   // Форматировать сообщение со словом
   private formatWordMessage(word: GermanWord): string {
-    let message = `🇩🇪 <b>${word.german}</b>\n`;
-    message += `🇷🇺 <i>${word.russian}</i>\n`;
-    
-    if (word.pronunciation) {
-      message += `🔊 [${word.pronunciation}]\n`;
-    }
-    
-    if (word.category) {
-      message += `📂 ${word.category}`;
-    }
+    let message = `🇩🇪 <b>${word.ge}</b>\n`;
+    message += `🇷🇺 <i>${word.ru}</i>`;
 
     return message;
   }

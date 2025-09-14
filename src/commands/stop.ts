@@ -1,5 +1,6 @@
 import { Context } from 'telegraf';
 import { wordScheduler } from '../services/word-scheduler';
+import { createMainKeyboard } from '../services/inline-keyboard';
 
 export const stop = () => {
   return async (ctx: Context) => {
@@ -12,7 +13,11 @@ export const stop = () => {
 
     // Проверяем, активен ли пользователь
     if (!wordScheduler.isUserActive(userId)) {
-      await ctx.reply('ℹ️ Вы не получаете слова. Используйте /start чтобы начать.');
+      const keyboard = createMainKeyboard(false);
+      await ctx.reply('ℹ️ Вы не получаете слова. Используйте кнопку ниже чтобы начать.', {
+        parse_mode: 'HTML',
+        ...keyboard
+      });
       return;
     }
 
@@ -20,7 +25,11 @@ export const stop = () => {
     const removed = wordScheduler.removeUser(userId);
 
     if (removed) {
-      await ctx.reply('⏹️ Получение слов остановлено. Используйте /start чтобы начать снова.');
+      const keyboard = createMainKeyboard(false);
+      await ctx.reply('❌ <b>Рассылка остановлена!</b>\nИспользуй кнопку ниже, чтобы возобновить обучение:', {
+        parse_mode: 'HTML',
+        ...keyboard
+      });
     } else {
       await ctx.reply('❌ Ошибка при остановке получения слов');
     }
