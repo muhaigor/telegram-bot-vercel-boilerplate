@@ -19,6 +19,9 @@ export class WordScheduler {
     // Если пользователь уже активен, сначала остановить его
     this.removeUser(userId);
 
+    // Отправляем первое слово сразу
+    this.sendFirstWord(ctx);
+
     const intervalId = setInterval(async () => {
       try {
         const word = getRandomWord();
@@ -70,6 +73,17 @@ export class WordScheduler {
     });
     this.activeUsers.clear();
     console.log('Все пользователи удалены из расписания');
+  }
+
+  // Отправить первое слово сразу при запуске
+  private async sendFirstWord(ctx: Context): Promise<void> {
+    try {
+      const word = getRandomWord();
+      const message = `🎯 <b>Первое слово:</b>\n\n${this.formatWordMessage(word)}`;
+      await ctx.reply(message, { parse_mode: 'HTML' });
+    } catch (error) {
+      console.error('Ошибка отправки первого слова:', error);
+    }
   }
 
   // Отправить сообщение со словом
