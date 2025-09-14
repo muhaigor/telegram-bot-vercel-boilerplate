@@ -11,7 +11,7 @@ interface ActiveUser {
 // Класс для управления расписанием отправки слов
 export class WordScheduler {
   private activeUsers: Map<number, ActiveUser> = new Map();
-  private readonly intervalMs: number = 160000; // 2 минуты 40 секунд (160 секунд)
+  private readonly intervalMs: number = 10000; // 10 секунд для тестирования
   private globalIntervalId: NodeJS.Timeout | null = null;
   private bot: Telegraf | null = null;
 
@@ -19,38 +19,52 @@ export class WordScheduler {
   public initialize(bot: Telegraf): void {
     this.bot = bot;
     this.startGlobalTimer();
-    console.log('WordScheduler инициализирован, глобальный таймер запущен');
+    console.log('🚀 WordScheduler инициализирован, глобальный таймер запущен');
   }
 
-  // Запустить глобальный таймер для отправки слов всем подписанным пользователям
+  // Запустить глобальный таймер для отправки слов всем активным пользователям
   private startGlobalTimer(): void {
     if (this.globalIntervalId) {
       clearInterval(this.globalIntervalId);
     }
 
     this.globalIntervalId = setInterval(async () => {
+      console.log('⏰ Таймер сработал, отправляем слова...');
       await this.sendWordsToAllActiveUsers();
     }, this.intervalMs);
 
-    console.log(`Глобальный таймер запущен с интервалом ${this.intervalMs}мс`);
+    console.log(`⏰ Глобальный таймер запущен с интервалом ${this.intervalMs}мс (${this.intervalMs/1000} секунд)`);
   }
 
   // Отправить слова всем активным пользователям
   private async sendWordsToAllActiveUsers(): Promise<void> {
-    if (!this.bot || this.activeUsers.size === 0) return;
+    if (!this.bot) {
+      console.log('❌ Бот не инициализирован');
+      return;
+    }
+    
+    if (this.activeUsers.size === 0) {
+      console.log('ℹ️ Нет активных пользователей для отправки слов');
+      return;
+    }
 
+    console.log(`📤 Отправляем слова ${this.activeUsers.size} активным пользователям`);
     const word = getRandomWord();
     const message = this.formatWordMessage(word);
+    console.log(`📝 Слово: ${word.ge} - ${word.ru}`);
 
     // Отправляем всем активным пользователям
     for (const [userId, user] of this.activeUsers) {
       if (user.isActive) {
         try {
+          console.log(`📨 Отправляем слово пользователю ${userId} в чат ${user.chatId}`);
           await this.bot.telegram.sendMessage(user.chatId, message, { parse_mode: 'HTML' });
+          console.log(`✅ Слово успешно отправлено пользователю ${userId}`);
         } catch (error) {
-          console.error(`Ошибка отправки в чат ${user.chatId}:`, error);
+          console.error(`❌ Ошибка отправки в чат ${user.chatId}:`, error);
           // При ошибке отправки удаляем пользователя
           this.activeUsers.delete(userId);
+          console.log(`🗑️ Пользователь ${userId} удален из активных из-за ошибки`);
         }
       }
     }
@@ -64,7 +78,7 @@ export class WordScheduler {
       isActive: true
     });
 
-    console.log(`Пользователь ${userId} добавлен в активные`);
+    console.log(`✅ Пользователь ${userId} добавлен в активные (всего активных: ${this.activeUsers.size})`);
   }
 
   // Удалить пользователя из активных
@@ -72,7 +86,7 @@ export class WordScheduler {
     const user = this.activeUsers.get(userId);
     if (user) {
       this.activeUsers.delete(userId);
-      console.log(`Пользователь ${userId} удален из активных`);
+      console.log(`❌ Пользователь ${userId} удален из активных (осталось активных: ${this.activeUsers.size})`);
       return true;
     }
     return false;
